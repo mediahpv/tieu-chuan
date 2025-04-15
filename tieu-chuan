@@ -1,0 +1,911 @@
+# BẢN NGUYÊN TẮC DỰ ÁN
+BẢN NGUYÊN TẮC DỰ ÁN
+MỤC LỤC
+1. Cấu trúc dự án Monorepo với Feature-Sliced Design (FSD)
+2. Quy tắc file index và exports
+3. Quy tắc đặt tên và định dạng code
+4. TypeScript standards
+5. Cấu trúc component
+6. State management
+7. Tích hợp API
+8. Tách biệt logic nghiệp vụ khỏi UI
+9. Tương thích React Native
+10. Hệ thống thiết kế
+11. Tối ưu hiệu năng
+12. Trải nghiệm người dùng (UX)
+13. Bảo mật ứng dụng
+14. Tiêu chuẩn viết test
+15. Tích hợp AI
+16. Tối ưu hóa SEO
+17. Quy trình chuyển đổi dần dần
+18. Cấu trúc chi tiết dự án
+19. Luồng dữ liệu (Data Flow)
+20. Sơ Đồ cấu trúctrúc backend hiện tại
+## 1. Cấu trúc thư mục
+src/core/: Ứng dụng cốt lõi (config, contexts, hooks, routing, store, constants, i18n, styles)
+src/shared/: Code dùng chung (api, ui, contexts, hooks, utils, types, config, assets)
+src/features/: Module chức năng (api, components, hooks, pages, contexts, lib, types, store)
+src/widgets/: UI phức tạp, tái sử dụng (Header, Footer, Sidebar, các widget khác)
+src/pages/: Trang đơn giản (routing và layout)
+Luồng phụ thuộc
+Tuân thủ luồng phụ thuộc FSD: pages → widgets → features → shared
+Không import trực tiếp vào file con của module khác
+Features không được import trực tiếp từ nhau
+Tuân thủ Unidirectional Data Flow (Props down, events/callbacks up)
+Công nghệ và styling
+Sử dụng TypeScript với Strict Mode, tránh dùng any
+Ưu tiên Emotion (CSS-in-JS) cho styling thông qua MUI
+Tuân thủ theme đã được định nghĩa, không hardcode giá trị
+Functional Components và Hooks là tiêu chuẩn
+Code Splitting và Lazy Loading cho tối ưu hiệu năng
+Ngôn ngữ và i18n
+Tiếng Việt là ngôn ngữ mặc định và dự phòng
+Sử dụng i18next cho đa ngôn ngữ
+Tên biến, hàm, class, comment kỹ thuật dùng tiếng Anh
+Comment giải thích code phức tạp bằng tiếng Việt
+Quy tắc file index và exports
+## 2. Quy tắc file index và exports
+Mỗi module (feature, widget, shared) CHỈ có MỘT file index.ts ở thư mục gốc
+File index.ts làm nhiệm vụ tạo "public API" cho module
+KHÔNG tạo file index.ts ở mọi thư mục con (components, pages, etc.) trừ khi có lý do đặc biệt
+Cách xuất (Export) 
+export { NotificationList } from './components/NotificationList/NotificationList';
+export { NotificationBell } from './components/NotificationBell/NotificationBell';
+export { NotificationsPage } from './pages/NotificationsPage/NotificationsPage';
+export type { NotificationProps } from './components/Notification/Notification.types';
+Cách nhập (Import)
+// Đúng
+import { NotificationBell } from '@/features/notifications';
+
+// Sai
+import { NotificationBell } from '@/features/notifications/components/NotificationBell/NotificationBell';
+Ranh giới module
+Tuân thủ luồng phụ thuộc FSD: pages → widgets → features → shared
+Shared có thể được import bởi bất kỳ layer nào
+Widget có thể import từ features và shared
+Features chỉ import từ shared
+Pages có thể import từ tất cả các layer
+## 3. Quy tắc đặt tên và định dạng code
+Đặt tên
+Biến và Hàm: camelCase - ví dụ: userName, calculateTotalPrice
+Boolean: Bắt đầu bằng is, has, should, can - ví dụ: isActive, hasPermission
+Hằng số: UPPER_SNAKE_CASE - ví dụ: API_BASE_URL, DEFAULT_PAGE_SIZE
+Components: PascalCase - ví dụ: UserProfileCard, PrimaryButton
+Interfaces/Types: PascalCase (không dùng tiền tố I hoặc T) - ví dụ: UserProfile
+Hooks: useCamelCase - ví dụ: useUserProfile, useFormValidation
+Styled Components: PascalCase với tiền tố S - ví dụ: SButton, SUserCard
+CSS Classes: kebab-case - ví dụ: user-profile-card, primary-button--disabled
+Định dạng
+Tuân thủ cấu hình Prettier và ESLint đã thiết lập
+Code trông nhất quán trên toàn bộ dự án
+Mỗi file chỉ chứa một component hoặc feature logic
+Giới hạn độ dài dòng: 100 ký tự
+Cài đặt Editor để tự động format on save
+Thứ tự Import
+// 1. React imports
+import React, { useState, useEffect } from 'react';
+
+// 2. Thư viện bên ngoài
+import { useTranslation } from 'react-i18next';
+import { styled } from '@mui/material/styles';
+
+// 3. Imports từ module khác (absolute paths)
+import { useAuth } from '@/features/auth';
+import { Button } from '@/shared/ui';
+
+// 4. Imports nội bộ (relative paths)
+import { useFormValidation } from '../hooks';
+import { UserType } from './types';
+
+// 5. Styles
+import './styles.css';
+Comments
+Viết comment giải thích "Why", không phải "What"
+Sử dụng TSDoc/JSDoc cho các hàm public, interfaces quan trọng
+Comment bằng tiếng Anh cho giải thích kỹ thuật
+Comment bằng tiếng Việt cho giải thích logic nghiệp vụ phức tạp
+## 4. TypeScript standards 
+TypeScript standards
+Quy tắc cơ bản
+strict: true trong tsconfig.json (bắt buộc)
+Tránh sử dụng any tuyệt đối
+Sử dụng unknown khi cần type chưa xác định, sau đó kiểm tra kiểu trước khi sử dụng
+Sử dụng interface cho object shapes, type cho union/utility types
+Tận dụng generics để tạo hàm/component có thể tái sử dụng với nhiều kiểu
+Định vị và Export Types
+shared/types/: Các kiểu dùng chung toàn cục
+shared/api/types.ts: DTO, kiểu request/response dùng chung
+features/[feature]/api/types.ts: Kiểu API dành riêng cho feature
+features/[feature]/model/types.ts: Kiểu dữ liệu nội bộ, state
+Chỉ export những types cần thiết qua file index.ts
+Typing trong React Components
+// Component.types.ts
+export interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'text';
+  size?: 'small' | 'medium' | 'large';
+  onClick?: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}
+
+// Component.tsx
+const Button: React.FC<ButtonProps> = ({
+  variant = 'primary',
+  size = 'medium',
+  onClick,
+  disabled = false,
+  children
+}) => {
+  // Implementation
+};
+Typing API và React Query
+// api/types.ts
+export interface ApiResponse<T> {
+  data: T;
+  error?: ApiErrorDetail;
+  meta?: {
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
+// hooks/useUsers.ts
+export function useUsers(params: UserQueryParams) {
+  return useQuery<ApiResponse<User[]>, ApiError>(['users', params], () => 
+    userApi.getUsers(params)
+  );
+}
+Utility Types
+Tận dụng: Partial, Pick, Omit, Required, Readonly, ReturnType
+Sử dụng as const cho objects chứa giá trị hằng số
+Định nghĩa và sử dụng custom utility types khi cần
+## 5. Cấu trúc component
+Cấu trúc component
+Cấu trúc thư mục
+ComponentName/
+├── index.tsx               // Export component
+├── ComponentName.tsx       // Định nghĩa component chính
+├── ComponentName.types.ts  // TypeScript interfaces/types
+├── ComponentName.styles.ts // Emotion styled components
+├── ComponentName.test.tsx  // Unit tests
+└── ComponentName.stories.tsx (nếu có) // Storybook stories
+Functional Components
+Sử dụng React Functional Components thay vì Class Components
+Sử dụng named exports thay vì default exports
+Tách biệt logic phức tạp thành custom hooks riêng
+Ưu tiên tách nhỏ components theo Single Responsibility Principle
+Props
+Định nghĩa interface cho props với TypeScript
+Sử dụng destructuring cho props
+Định nghĩa giá trị mặc định cho props khi cần thiết
+Tránh truyền quá nhiều props (nên tách component nhỏ hơn)
+Tham chiếu theme cho styling thay vì hardcode values
+Styling
+import { styled } from '@mui/material/styles';
+import { Button as MuiButton } from '@mui/material';
+
+export const SButton = styled(MuiButton)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  padding: theme.spacing(1, 2),
+  '&:hover': {
+    backgroundColor: theme.palette.primary.dark,
+  },
+}));
+Performance
+Memoize components với React.memo khi cần thiết
+Sử dụng useCallback cho event handlers
+Sử dụng useMemo cho các tính toán phức tạp
+Tránh re-renders không cần thiết
+Lazy load components khi phù hợp
+## 6. State management
+Nguyên tắc chung
+Mỗi loại state cần được lưu trữ ở đúng nơi, tránh duplicate
+Ưu tiên state local khi có thể, chỉ dùng global state khi cần thiết
+Tách biệt server state (dữ liệu từ API) và client state (UI state)
+Mô hình hóa state theo domain, không theo UI
+Luôn định nghĩa kiểu dữ liệu (TypeScript) cho state
+Server State với React Query
+// hooks/useProducts.ts
+export function useProducts(params = {}) {
+  return useQuery(['products', params], () => productsApi.getProducts(params), {
+    staleTime: 5 * 60 * 1000, // 5 phút
+    keepPreviousData: true,
+  });
+}
+
+// Component
+const { data, isLoading, error } = useProducts({ category: 'electronics' });
+Client State với Zustand
+// store/uiStore.ts
+export const useUiStore = create<UiState>((set) => ({
+  theme: 'light',
+  sidebarOpen: false,
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  toggleTheme: () => set((state) => ({ 
+    theme: state.theme === 'light' ? 'dark' : 'light' 
+  })),
+}));
+
+// Component
+const { sidebarOpen, setSidebarOpen } = useUiStore(
+  (state) => ({ 
+    sidebarOpen: state.sidebarOpen,
+    setSidebarOpen: state.setSidebarOpen
+  })
+);
+React Context
+Chỉ sử dụng cho state ít thay đổi (theme, i18n) hoặc state cần truy cập bởi nhiều thành phần con
+Tránh đặt data lớn hoặc thay đổi thường xuyên trong Context
+Đảm bảo tối ưu re-renders với memoization
+Local State
+useState cho state đơn giản
+useReducer cho state phức tạp hoặc có nhiều actions liên quan
+Tách state logic thành custom hooks để tái sử dụng
+## 7. Tích hợp API
+Tích hợp API
+Cấu trúc và tổ chức API
+Sử dụng axiosClient từ shared/api cho tất cả HTTP requests
+Tổ chức API theo domains/features, không theo endpoints
+Đặt API calls trong files riêng theo domain:
+shared/api/[domain].api.ts cho API dùng chung
+features/[featureName]/api/[domain].api.ts cho feature-specific API
+Export tất cả API functions từ index.ts của thư mục api
+API Functions và Types
+// api/types.ts
+export interface ApiResponse<T> {
+  data: T;
+  meta?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
+export interface UserDTO {
+  id: string;
+  fullName: string;
+  email: string;
+  role: 'admin' | 'user';
+}
+
+// api/users.api.ts
+export const getUsers = async (params?: UserQueryParams): Promise<ApiResponse<UserDTO[]>> => {
+  const response = await axiosClient.get('/users', { params });
+  return response.data;
+};
+Tích hợp với React Query
+// hooks/useUsers.ts
+export const useUsers = (params: UserQueryParams = {}) => {
+  return useQuery(['users', params], () => usersApi.getUsers(params));
+};
+
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation(usersApi.updateUser, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+    },
+  });
+};
+Error Handling
+Xử lý lỗi nhất quán trong toàn bộ ứng dụng
+Sử dụng axios interceptors để xử lý lỗi chung (token expiry, network)
+Hiển thị error messages thân thiện với người dùng
+Validate input trước khi gửi lên server
+Security
+Không lưu credentials hoặc tokens trong code
+Đảm bảo refresh token logic được xử lý đúng
+Sử dụng CSRF protection khi cần
+Validate input trước khi gửi lên server
+## 8. Tách biệt logic nghiệp vụ khỏi UI
+Mục tiêu và nguyên tắc
+Logic nghiệp vụ (business logic) PHẢI HOÀN TOÀN TÁCH BIỆT khỏi UI components
+Mục tiêu: Tái sử dụng logic giữa web và mobile (React Native)
+Tất cả tương tác API phải được đặt trong custom hooks
+Components không được chứa business logic, chỉ phụ trách hiển thị UI
+Cấu trúc phân lớp
+API Layer: Định nghĩa các hàm gọi API thuần túy (api/)
+Service Layer: Logic nghiệp vụ không phụ thuộc UI (services/)
+Hook Layer: React hooks kết nối service với UI (hooks/)
+Component Layer: UI components thuần túy (components/, ui/)
+Ví dụ triển khai
+// 1. API Layer - auth.api.ts
+export const authApi = {
+  login: async (credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> => {
+    return await axiosClient.post('/login', credentials);
+  },
+};
+
+// 2. Service Layer - auth.service.ts
+export const AuthService = {
+  validatePassword: (password: string): boolean => {
+    return password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
+  },
+  parseJwtToken: (token: string): UserInfo => {
+    // Logic parse token
+    return decoded;
+  },
+};
+
+// 3. Hook Layer - useLoginMutation.ts
+export const useLoginMutation = () => {
+  return useMutation({
+    mutationFn: authApi.login,
+    onSuccess: (data) => {
+      // Xử lý đăng nhập thành công
+    },
+    onError: (error) => {
+      // Xử lý lỗi đăng nhập
+    }
+  });
+};
+
+// 4. Component Layer - LoginForm.tsx
+const LoginForm: React.FC = () => {
+  const { mutate, isLoading, error } = useLoginMutation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutate({ email, password });
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* UI rendering logic only */}
+    </form>
+  );
+};
+## 9. Tương thích React Native
+Nguyên tắc chung
+Tách biệt hoàn toàn logic nghiệp vụ và UI để tái sử dụng
+Không phụ thuộc vào Web APIs trong shared logic
+Sử dụng abstract storage interface cho các API đặc thù cho nền tảng
+Tách UI components thành platform-specific
+Shared Logic
+Logic nghiệp vụ phải đặt trong services, không phụ thuộc React
+Không được sử dụng browser APIs trong shared logic:
+localStorage, sessionStorage
+window, document
+navigator
+History API, Location API
+Không xử lý DOM events trong business logic
+Sử dụng TypeScript cho type safety giữa các platforms
+Thay thế cho Web APIs
+| Web API | Thay thế | Vị trí |
+|---|----|-----|
+| localStorage | IStorageService | packages/core/services/storage |
+| window.fetch | axiosClient | shared/api/axiosClient |
+| window.location | useNavigation hook | platform-specific hooks |
+| document.cookie | ITokenService | packages/auth-core/services/token |
+Tiện ích tương thích
+Ưu tiên sử dụng các thư viện cross-platform:
+date-fns thay vì Date API
+i18next cho internationalization
+yup/zod cho validation
+axios cho HTTP requests
+
+## 10. Hệ thống thiết kế
+Màu sắc
+Sử dụng các biến màu từ theme thông qua theme.palette
+Không hardcode mã màu (#hex, rgb(), v.v.) trong code
+Tuân thủ hệ thống màu sắc đã định nghĩa: primary, secondary, error, warning, info, success
+Sử dụng các cấp độ tone màu nhất quán (light, main, dark)
+Có xem xét về độ tương phản cho accessibility
+Typography
+Sử dụng các variant typography từ theme: h1-h6, subtitle1, body1, etc.
+Không tự định nghĩa font-size, font-weight, line-height
+Tham chiếu tới theme.typography để đảm bảo tính nhất quán
+Sử dụng rem hoặc em thay vì px cho font-size
+Spacing
+Sử dụng hệ thống spacing từ theme thông qua theme.spacing()
+Tuân thủ nguyên tắc 8-point grid system
+Đảm bảo spacing nhất quán giữa các component
+Tránh sử dụng các giá trị tùy ý
+Component States
+Thiết kế rõ ràng các trạng thái: default, hover, active, focus, disabled
+Sử dụng disabled props thay vì CSS opacity
+Cung cấp feedback trực quan cho các interactive elements
+Xác định outline style cho focus state
+Accessibility
+Đảm bảo contrast ratio đạt WCAG AA (4.5:1 cho text thường, 3:1 cho text lớn)
+Sử dụng semantic elements (button, a, h1, nav, etc.)
+Cung cấp focus visible cho tất cả interactive elements
+Hỗ trợ keyboard navigation
+Sử dụng ARIA attributes khi cần thiết
+## 11. Tối ưu hiệu năng 
+Code Splitting & Lazy Loading
+// App.tsx
+const HomePage = React.lazy(() => import('./pages/HomePage'));
+const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+
+function App() {
+  return (
+    <Suspense fallback={<CircularProgress />}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/profile" element={<UserProfile />} />
+      </Routes>
+    </Suspense>
+  );
+}
+Memoization
+// Memoize component
+const ExpensiveComponent = React.memo(({ data }) => {
+  // Render logic
+});
+
+// Memoize function
+const handleClick = useCallback(() => {
+  // Handle click logic
+}, [dependency]);
+
+// Memoize computed value
+const filteredData = useMemo(() => {
+  return expensiveComputation(data);
+}, [data]);
+Tối ưu Bundle Size
+Phân tích bundle với webpack-bundle-analyzer
+Import cụ thể thay vì toàn bộ thư viện
+Cân nhắc kỹ trước khi thêm thư viện mới
+Loại bỏ code trùng lặp
+Tối ưu Rendering
+Sử dụng state hợp lý, tránh đặt quá nhiều state không liên quan
+Truyền props một cách chọn lọc
+Sử dụng Context API cẩn thận
+Virtualization cho danh sách dài (react-window, react-virtualized)
+Tối ưu Hình ảnh
+Sử dụng WebP hoặc AVIF khi có thể
+Lazy loading cho hình ảnh (loading="lazy")
+Responsive images với srcset và sizes
+Nén ảnh trước khi đưa vào dự án
+## 12. Trải nghiệm người dùng (UX)
+Phản hồi Hệ thống
+Luôn cung cấp chỉ báo rõ ràng khi đang thực hiện tác vụ (loading, progress)
+Vô hiệu hóa các nút/form trong khi đang xử lý
+Sử dụng thông báo success/error rõ ràng
+Hiển thị thanh tiến trình cho các tác vụ kéo dài
+Xử lý Lỗi
+Hiển thị thông báo lỗi bằng ngôn ngữ dễ hiểu
+Sử dụng validation phía client để ngăn chặn lỗi sớm
+Cung cấp khả năng thử lại (retry) cho các lỗi tạm thời
+Giữ lại dữ liệu đã nhập khi có lỗi
+Điều hướng
+Cấu trúc điều hướng phải dễ hiểu và logic
+Giữ menu điều hướng chính nhất quán
+Làm nổi bật mục đang được chọn
+Sử dụng breadcrumbs khi cần
+Link phải dễ nhận biết
+Tính nhất quán
+Duy trì sự nhất quán về giao diện, hành vi và ngôn ngữ
+Các hành động tương tự nên có kết quả và phản hồi tương tự
+Sử dụng thuật ngữ nhất quán
+Khả năng tiếp cận (a11y)
+Sử dụng semantic HTML
+Đảm bảo keyboard navigation
+Chỉ báo focus rõ ràng
+Đảm bảo độ tương phản màu đủ
+Sử dụng ARIA attributes khi cần
+Tất cả input phải có label liên kết
+
+## 13. Bảo mật ứng dụng
+Authentication & Authorization
+Sử dụng JWT với expiration time phù hợp
+Implement refresh token rotation
+Sử dụng HttpOnly cookie cho refresh tokens
+Làm việc với permissions/roles, không chỉ dựa vào user ID
+Sử dụng MFA cho tài khoản nhạy cảm
+Bảo vệ dữ liệu
+Không lưu trữ thông tin nhạy cảm trong localStorage/sessionStorage
+Sử dụng HTTPs cho tất cả API calls
+Mã hóa dữ liệu nhạy cảm trước khi lưu trữ
+Implement rate limiting để phòng chống brute force
+Sử dụng secure headers (HSTS, CSP, X-XSS-Protection)
+Input Validation
+Validate tất cả input từ người dùng ở cả client và server
+Sử dụng thư viện validation (Zod, Yup)
+Sanitize HTML content để tránh XSS
+Triển khai CSRF protection
+Giới hạn kích thước và loại file upload
+Secure Coding
+Tránh sử dụng eval() và các hàm tương tự
+Cập nhật dependencies thường xuyên
+Sử dụng tham số có tên thay vì string concatenation trong SQL queries
+Tránh third-party scripts không đáng tin cậy
+Implement Content Security Policy (CSP)
+## 14. Tiêu chuẩn viết test
+Các Loại Test
+Unit Tests:
+Kiểm tra một đơn vị code nhỏ, biệt lập
+Công cụ: Jest, React Testing Library (RTL)
+Integration Tests:
+Kiểm tra sự tương tác giữa nhiều đơn vị code
+Công cụ: Jest, React Testing Library
+End-to-End (E2E) Tests:
+Kiểm tra toàn bộ luồng ứng dụng từ góc nhìn người dùng
+Công cụ: Cypress hoặc Playwright
+Quy ước Viết Test
+// Component.test.tsx
+describe('Button component', () => {
+  it('should render with default props', () => {
+    // Arrange
+    render(<Button>Click me</Button>);
+    
+    // Act - không cần trong trường hợp này
+    
+    // Assert
+    expect(screen.getByRole('button')).toHaveTextContent('Click me');
+  });
+  
+  it('should call onClick when clicked', () => {
+    // Arrange
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click me</Button>);
+    
+    // Act
+    fireEvent.click(screen.getByRole('button'));
+    
+    // Assert
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+});
+Mocking
+// Mocking API
+jest.mock('../../api/users', () => ({
+  getUsers: jest.fn().mockResolvedValue([
+    { id: '1', name: 'John Doe' },
+    { id: '2', name: 'Jane Smith' },
+  ]),
+}));
+
+// Mocking hooks
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useParams: jest.fn().mockReturnValue({ id: '123' }),
+}));
+Vị trí và Đặt tên
+Đặt file test cạnh file code: Button.tsx và Button.test.tsx
+Hoặc trong thư mục __tests__: Button.tsx và __tests__/Button.test.tsx
+Sử dụng hậu tố .test.ts hoặc .spec.ts (dùng nhất quán)
+
+## 15. Tích hợp AI
+Nguyên tắc chung
+Code phải sạch, modular, dễ hiểu, được type tốt, và tách biệt rõ ràng
+Thiết kế database phải lưu trữ dữ liệu có cấu trúc phù hợp cho Machine Learning
+Ưu tiên triển khai các tính năng cốt lõi trước, sau đó là các tính năng AI nâng cao
+APIs tới các dịch vụ AI nên được trừu tượng hóa và có thể thay đổi một cách linh hoạt
+Kiến trúc tích hợp
+Tạo layer trừu tượng trong shared/services/ai để tích hợp với các API AI bên ngoài
+Sử dụng service worker hoặc background processing cho các xử lý AI nặng
+Xử lý và caching kết quả AI để tránh gọi API không cần thiết
+Cung cấp fallback phù hợp khi dịch vụ AI không khả dụng
+Bảo mật AI
+Thực hiện validate và sanitize mọi đầu vào cho AI model
+Kiểm soát và lọc đầu ra từ các dịch vụ AI trước khi hiển thị cho người dùng
+Áp dụng rate limiting cho các API calls tới dịch vụ AI
+Ẩn API keys trong environment variables và không bao giờ expose trên client
+Trải nghiệm người dùng
+Cung cấp feedback rõ ràng khi hệ thống đang xử lý AI (skeleton loading, progress)
+Thiết kế UI để dễ dàng phân biệt nội dung do AI tạo ra và nội dung của người dùng
+Cho phép người dùng từ chối hoặc tùy chỉnh các chức năng AI
+Thiết kế các prompts và hướng dẫn rõ ràng cho việc tương tác với AI
+    
+## 16. Tối ưu hóa SEO
+Semantic HTML
+Sử dụng thẻ đúng ngữ nghĩa (<h1>, <nav>, <main>, <article>, <aside>, <header>, <footer>)
+Tránh lạm dụng <div> và <span>
+Đảm bảo cấu trúc heading (<h1> - <h6>) logic và nhất quán
+// Thêm vào SEO component
+<script type="application/ld+json">
+  {JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Tên sản phẩm",
+    "description": "Mô tả sản phẩm",
+    "offers": {
+      "@type": "Offer",
+      "price": "999000",
+      "priceCurrency": "VND"
+    }
+  })}
+</script>
+Structured Data (Schema Markup)
+// Thêm vào SEO component
+<script type="application/ld+json">
+  {JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Tên sản phẩm",
+    "description": "Mô tả sản phẩm",
+    "offers": {
+      "@type": "Offer",
+      "price": "999000",
+      "priceCurrency": "VND"
+    }
+  })}
+</script>
+Routing và URLs 
+Sử dụng URL ngắn gọn, mô tả, chứa từ khóa liên quan
+Sử dụng dấu gạch ngang - để phân tách các từ
+Tránh tham số truy vấn phức tạp cho nội dung chính
+Đối với các trang quan trọng cần SEO tốt, cân nhắc sử dụng:
+Server-Side Rendering (SSR): Render HTML trên server cho mỗi request
+Static Site Generation (SSG): Tạo file HTML tĩnh tại thời điểm build
+Performance và Core Web Vitals
+Tốc độ tải trang là yếu tố xếp hạng quan trọng
+Theo dõi và tối ưu Core Web Vitals (LCP, FID/INP, CLS)
+Tối ưu hình ảnh: nén, lazy loading, next-gen formats
+Tối ưu JavaScript: code-splitting, tree-shaking, bundling hiệu quả
+Nội dung (Content)
+Cung cấp nội dung độc đáo, giá trị, và liên quan đến mục tiêu tìm kiếm
+Sử dụng từ khóa mục tiêu một cách tự nhiên
+Cấu trúc nội dung dễ đọc với headings, đoạn văn ngắn, danh sách
+Liên kết đến các trang liên quan khác trong website
+
+## 17. Quy trình chuyển đổi dần dần
+Nguyên tắc cốt lõi
+Hoàn thành tách biệt logic và UI trong mỗi lần chỉnh sửa file
+Không để dự án ở trạng thái nửa vời hoặc không nhất quán
+Không cần chuyển đổi toàn bộ codebase cùng một lúc
+Quy tắc "Chạm đến đâu, refactor đến đó"
+Khi cần sửa đổi một file, PHẢI refactor file đó theo cấu trúc mới hoàn chỉnh
+Không chỉ sửa một phần nhỏ mà giữ nguyên phần còn lại theo cấu trúc cũ
+Nếu không đủ thời gian refactor toàn bộ file, chọn làm việc khác thay vì để file ở trạng thái nửa vời
+Quy tắc "Hoàn thành đầy đủ các lớp"
+Khi refactor một tính năng, phải hoàn thiện tất cả các lớp: API, Service, Hook, và Component
+Không được để thiếu layer bất kỳ, đặc biệt là Service layer
+Tạo đầy đủ các file liên quan theo cấu trúc đã định nghĩa
+Quy trình refactor khi chỉnh sửa file
+Đánh giá phạm vi ảnh hưởng
+Xác định phụ thuộc của file cần sửa
+Liệt kê tất cả các file cần refactor cùng lúc
+Ước tính thời gian thực hiện
+Tạo branch riêng
+Tạo branch dành riêng cho việc refactor
+KHÔNG kết hợp refactor và thêm tính năng mới trong cùng một PR
+Thực hiện refactor đồng bộ
+Tách API layer
+Tạo Service layer
+Tạo Hook layer với React Query
+Cập nhật Component layer
+Test kỹ lưỡng
+Unit test cho từng layer
+Integration test cho toàn bộ flow
+Manual test các tính năng bị ảnh hưởng
+Review và merge
+Code review phải kiểm tra tính đầy đủ của refactor
+Đảm bảo không còn logic nghiệp vụ trong UI components
+Kiểm tra độ phủ test
+
+## 18. Cấu trúc chi tiết dự án
+apps/
+├── web/                # Ứng dụng web React
+│   ├── src/
+│   │   ├── core/       # Cấu hình cốt lõi
+│   │   │   ├── config/ # Các cấu hình ứng dụng
+│   │   │   ├── context/ # Context providers
+│   │   │   ├── hooks/  # Core hooks
+│   │   │   ├── router/ # Cấu hình router
+│   │   │   ├── store/  # Zustand stores
+│   │   │   └── styles/ # Theme và global styles
+│   │   ├── shared/     # Code dùng chung
+│   │   │   ├── api/    # Cấu hình API client
+│   │   │   ├── ui/     # UI components dùng chung
+│   │   │   ├── utils/  # Tiện ích
+│   │   │   └── types/  # Kiểu dữ liệu dùng chung
+│   │   ├── features/   # Các tính năng ứng dụng
+│   │   │   ├── auth/   # Tính năng xác thực
+│   │   │   │   ├── api/ # API calls
+│   │   │   │   ├── components/ # UI components
+│   │   │   │   ├── hooks/ # Custom hooks
+│   │   │   │   ├── services/ # Business logic
+│   │   │   │   ├── pages/ # Route pages
+│   │   │   │   ├── lib/ # Utilities
+│   │   │   │   ├── types/ # Type definitions
+│   │   │   │   └── index.ts # Public API
+│   │   │   └── ...
+│   │   ├── widgets/    # UI phức tạp, tái sử dụng
+│   │   │   ├── Header/ # Header component
+│   │   │   ├── Footer/ # Footer component
+│   │   │   └── ...
+│   │   ├── pages/      # Trang đơn giản
+│   │   │   ├── HomePage/
+│   │   │   ├── AboutPage/
+│   │   │   └── ...
+│   │   └── App.tsx     # Component gốc
+│   ├── public/         # Static assets
+│   └── package.json    # Web dependencies
+├── mobile/             # React Native app
+└── admin/              # Admin dashboard
+
+packages/
+├── core/               # Shared business logic
+├── ui/                 # UI component library
+└── config/             # Shared configs
+
+docs/                   # Documentation
+tests/                  # E2E tests
+scripts/                # Build scripts
+
+## 19. Luồng dữ liệu (Data Flow)
+Nguyên tắc luồng dữ liệu một chiều
+Data luôn chảy từ cha xuống con thông qua props
+Event handlers được truyền từ cha xuống con
+Con gọi event handlers để thông báo thay đổi cho cha
+Tránh dùng state management để truyền dữ liệu giữa các components gần nhau
+Luồng dữ liệu ứng dụng
+Người dùng tương tác với UI → Component xử lý sự kiện
+Component gọi Hook → Hook gọi Service hoặc API
+API return dữ liệu → React Query update cache
+Cache được cập nhật → Component re-render với dữ liệu mới
+Các bước xử lý form
+Component form render và sử dụng hook form
+Người dùng nhập liệu và submit
+Hook validate dữ liệu
+Hook gọi API để lưu dữ liệu
+API trả về kết quả
+Hook xử lý kết quả và thông báo cho component
+Component hiển thị thông báo và chuyển hướng nếu cần
+
+## 20. Sơ Đồ cấu trúc backend hiện tại
+apps/api/
+├── src/                 # Source code - Mã nguồn chính
+│   ├── controllers/     # Route controllers - Bộ điều khiển tuyến đường
+│   │   ├── index.js     # Xuất các controller
+│   │   ├── authController.js # Bộ điều khiển xác thực
+│   │   ├── userController.js # Bộ điều khiển người dùng
+│   │   ├── propertyController.js # Bộ điều khiển bất động sản
+│   │   ├── productController.js # Bộ điều khiển sản phẩm
+│   │   ├── orderController.js # Bộ điều khiển đơn hàng
+│   │   ├── customerController.js # Bộ điều khiển khách hàng
+│   │   ├── calendarController.js # Bộ điều khiển lịch
+│   │   ├── employeeController.js # Bộ điều khiển nhân viên
+│   │   ├── attendanceController.js # Bộ điều khiển chấm công
+│   │   ├── roleController.js # Bộ điều khiển vai trò
+│   │   ├── homeController.js # Bộ điều khiển trang chủ
+│   │   ├── contactController.js # Bộ điều khiển liên hệ
+│   │   ├── feedbackController.js # Bộ điều khiển phản hồi
+│   │   ├── appointmentController.js # Bộ điều khiển cuộc hẹn
+│   │   ├── leadController.js # Bộ điều khiển tiềm năng
+│   │   ├── departmentController.js # Bộ điều khiển phòng ban
+│   │   ├── taskController.js # Bộ điều khiển nhiệm vụ
+│   │   ├── valuationController.js # Bộ điều khiển định giá
+│   │   ├── newsController.js # Bộ điều khiển tin tức
+│   │   ├── calendarEventController.js # Bộ điều khiển sự kiện lịch
+│   │   ├── opportunityController.js # Bộ điều khiển cơ hội
+│   │   ├── serviceContentController.js # Bộ điều khiển nội dung dịch vụ
+│   │   ├── projectController.js # Bộ điều khiển dự án
+│   │   ├── categoryController.js # Bộ điều khiển danh mục
+│   │   ├── mediaController.js # Bộ điều khiển phương tiện
+│   │   ├── dashboardController.js # Bộ điều khiển bảng điều khiển 
+│   │   └── propertyListingController.js # Bộ điều khiển danh sách bất động sản
+│   ├── routes/         # API routes - Các tuyến đường API
+│   │   ├── index.js # Tập tin xuất tuyến đường
+│   │   ├── authRoutes.js # Tuyến đường xác thực
+│   │   ├── userRoutes.js # Tuyến đường người dùng
+│   │   ├── propertyRoutes.js # Tuyến đường bất động sản
+│   │   ├── propertyListingRoutes.js # Tuyến đường danh sách bất động sản
+│   │   ├── productRoutes.js # Tuyến đường sản phẩm
+│   │   ├── orderRoutes.js # Tuyến đường đơn hàng
+│   │   ├── customerRoutes.js # Tuyến đường khách hàng
+│   │   ├── calendarRoutes.js # Tuyến đường lịch
+│   │   ├── calendarEventRoutes.js # Tuyến đường sự kiện lịch
+│   │   ├── employeeRoutes.js # Tuyến đường nhân viên
+│   │   ├── attendanceRoutes.js # Tuyến đường chấm công
+│   │   ├── newsRoutes.js # Tuyến đường tin tức
+│   │   ├── taskRoutes.js # Tuyến đường nhiệm vụ
+│   │   ├── valuationRoutes.js # Tuyến đường định giá
+│   │   ├── LeadRoutes.js # Tuyến đường tiềm năng
+│   │   ├── departmentRoutes.js # Tuyến đường phòng ban
+│   │   ├── appointmentRoutes.js # Tuyến đường cuộc hẹn
+│   │   ├── feedbackRoutes.js # Tuyến đường phản hồi
+│   │   ├── contactRoutes.js # Tuyến đường liên hệ
+│   │   ├── homeRoutes.js # Tuyến đường trang chủ
+│   │   ├── dashboardRoutes.js # Tuyến đường bảng điều khiển
+│   │   ├── documentRoutes.js # Tuyến đường tài liệu
+│   │   ├── trainingRoutes.js # Tuyến đường đào tạo
+│   │   ├── evaluationRoutes.js # Tuyến đường đánh giá
+│   │   ├── salaryRoutes.js # Tuyến đường lương
+│   │   ├── opportunityRoutes.js # Tuyến đường cơ hội
+│   │   ├── projectRoutes.js # Tuyến đường dự án
+│   │   ├── serviceContentRoutes.js # Tuyến đường nội dung dịch vụ
+│   │   ├── categoryRoutes.js # Tuyến đường danh mục
+│   │   └── mediaRoutes.js # Tuyến đường phương tiện
+│   ├── models/        # Database models - Mô hình cơ sở dữ liệu
+│   │   ├── index.js # Xuất các model
+│   │   ├── User.js # Mô hình người dùng
+│   │   ├── ServiceContent.js # Mô hình nội dung dịch vụ
+│   │   ├── Project.js # Mô hình dự án
+│   │   ├── Category.js # Mô hình danh mục
+│   │   ├── Media.js # Mô hình phương tiện
+│   │   ├── Product.js # Mô hình sản phẩm
+│   │   ├── Order.js # Mô hình đơn hàng
+│   │   ├── Customer.js # Mô hình khách hàng
+│   │   ├── Property.js # Mô hình bất động sản
+│   │   ├── CalendarEvent.js # Mô hình sự kiện lịch
+│   │   ├── Employee.js # Mô hình nhân viên
+│   │   ├── Attendance.js # Mô hình chấm công
+│   │   ├── Role.js # Mô hình vai trò
+│   │   ├── Department.js # Mô hình phòng ban
+│   │   ├── Lead.js # Mô hình tiềm năng
+│   │   ├── Task.js # Mô hình nhiệm vụ
+│   │   ├── Valuation.js # Mô hình định giá
+│   │   ├── News.js # Mô hình tin tức
+│   │   ├── Opportunity.js # Mô hình cơ hội
+│   │   ├── PropertyListing.js # Mô hình danh sách bất động sản
+│   │   ├── Home.js # Mô hình trang chủ
+│   │   ├── Contact.js # Mô hình liên hệ
+│   │   ├── Feedback.js # Mô hình phản hồi
+│   │   └── Appointment.js # Mô hình cuộc hẹn
+│   ├── services/      # Business logic - Logic nghiệp vụ
+│   │   ├── index.js # Xuất các service
+│   │   ├── authService.js # Dịch vụ xác thực
+│   │   ├── userService.js # Dịch vụ người dùng
+│   │   ├── productService.js # Dịch vụ sản phẩm
+│   │   ├── orderService.js # Dịch vụ đơn hàng
+│   │   ├── customerService.js # Dịch vụ khách hàng
+│   │   ├── calendarService.js # Dịch vụ lịch
+│   │   ├── propertyService.js # Dịch vụ bất động sản
+│   │   ├── employeeService.js # Dịch vụ nhân viên
+│   │   ├── attendanceService.js # Dịch vụ chấm công
+│   │   ├── roleService.js # Dịch vụ vai trò
+│   │   ├── homeService.js # Dịch vụ trang chủ
+│   │   ├── contactService.js # Dịch vụ liên hệ
+│   │   ├── feedbackService.js # Dịch vụ phản hồi
+│   │   ├── appointmentService.js # Dịch vụ cuộc hẹn
+│   │   ├── leadService.js # Dịch vụ tiềm năng
+│   │   ├── departmentService.js # Dịch vụ phòng ban
+│   │   ├── taskService.js # Dịch vụ nhiệm vụ
+│   │   ├── valuationService.js # Dịch vụ định giá
+│   │   ├── newsService.js # Dịch vụ tin tức
+│   │   ├── calendarEventService.js # Dịch vụ sự kiện lịch
+│   │   ├── opportunityService.js # Dịch vụ cơ hội
+│   │   ├── propertyListingService.js # Dịch vụ danh sách bất động sản
+│   │   ├── HRM/              # HRM services - Dịch vụ quản lý nhân sự
+│   │   │   ├── attendanceService.js # Dịch vụ chấm công
+│   │   │   └── organizationService.js # Dịch vụ tổ chức
+│   │   ├── serviceContentService.js # Dịch vụ nội dung dịch vụ
+│   │   ├── projectService.js # Dịch vụ dự án
+│   │   ├── categoryService.js # Dịch vụ danh mục
+│   │   ├── mediaService.js # Dịch vụ phương tiện
+│   │   └── dashboardService.js # Dịch vụ bảng điều khiển
+│   ├── middleware/     # Express middleware - Middleware Express
+│   │   ├── index.js # Xuất các middleware
+│   │   ├── auth.js # Xác thực
+│   │   ├── error.js # Xử lý lỗi
+│   │   ├── logging.js # Ghi nhật ký
+│   │   ├── notFound.js # Xử lý không tìm thấy
+│   │   ├── validation.js # Xác thực dữ liệu
+│   │   ├── permission.js # Kiểm tra quyền
+│   │   ├── rateLimiter.js # Giới hạn tốc độ
+│   │   ├── cache.js # Bộ nhớ đệm
+│   │   └── security.js # Bảo mật
+│   ├── utils/         # Utility functions - Hàm tiện ích
+│   │   ├── index.js # Xuất các tiện ích
+│   │   ├── i18n.js # Quốc tế hóa
+│   │   ├── logger.js # Ghi nhật ký
+│   │   ├── responseFormatter.js # Định dạng phản hồi
+│   │   └── helper.js # Hàm trợ giúp
+│   ├── config/        # Configuration files - Tập tin cấu hình
+│   │   ├── index.js # Xuất cấu hình
+│   │   ├── config.js # Cấu hình chung
+│   │   └── db.js # Cấu hình cơ sở dữ liệu
+│   ├── app.js          # Express app configuration - Cấu hình ứng dụng Express
+│   ├── server.js       # Server configuration - Cấu hình máy chủ
+│   └── index.js        # Entry point - Điểm khởi đầu
+├── scripts/          # Utility scripts - Script tiện ích
+│   └── seed.js # Script dữ liệu mẫu
+├── logs/             # Log files - Tập tin nhật ký
+│   ├── combined.log # Nhật ký tổng hợp
+│   └── error.log # Nhật ký lỗi
+├── tests/            # Test files - Tập tin kiểm thử
+│   ├── routes/ # Kiểm thử tuyến đường
+│   ├── controllers/ # Kiểm thử bộ điều khiển
+│   ├── models/ # Kiểm thử mô hình
+│   ├── services/ # Kiểm thử dịch vụ
+│   └── testsServer.js # Máy chủ kiểm thử
+├── package.json      # API dependencies - Phụ thuộc API
+├── node_modules/     # API dependencies - Phụ thuộc API
+└── .env              # Environment variables - Biến môi trường
