@@ -20,7 +20,8 @@ MỤC LỤC
 17. Quy trình chuyển đổi dần dần
 18. Cấu trúc chi tiết dự án
 19. Luồng dữ liệu (Data Flow)
-20. Sơ Đồ cấu trúctrúc backend hiện tại
+20. Nguyên tắc Thiết kế và giao diện thích ứng
+21. Sơ Đồ cấu trúctrúc backend hiện tại
 ## 1. Cấu trúc thư mục
 src/core/: Ứng dụng cốt lõi (config, contexts, hooks, routing, store, constants, i18n, styles)
 src/shared/: Code dùng chung (api, ui, contexts, hooks, utils, types, config, assets)
@@ -749,7 +750,266 @@ API trả về kết quả
 Hook xử lý kết quả và thông báo cho component
 Component hiển thị thông báo và chuyển hướng nếu cần
 
-## 20. Sơ Đồ cấu trúc backend hiện tại
+
+## 20. Nguyên tắc Thiết kế và giao diện thích ứng
+
+### Thiết kế thích ứng (Responsive Design)
+- **Mobile-first approach:** Thiết kế cho thiết bị di động trước, sau đó mở rộng lên màn hình lớn hơn
+- **Sử dụng MUI breakpoints:** Không tạo breakpoints tùy ý, luôn dùng `theme.breakpoints` từ MUI theme
+- **Tránh kích thước cố định:** Không dùng pixel tuyệt đối cho width/height, ưu tiên đơn vị tương đối (%, rem, vh/vw)
+- **Testing đa nền tảng:** Kiểm tra UI trên ít nhất 3 kích thước (mobile, tablet, desktop)
+
+### Hệ thống thiết kế
+- **Design consistency:** Đảm bảo nhất quán về giao diện trên toàn bộ ứng dụng
+- **Theme-driven development:** Sử dụng theme để điều khiển giao diện thay vì hardcode
+- **Component-based:** Phát triển UI dựa trên components có thể tái sử dụng 
+- **Accessibility first:** Thiết kế với truy cập phổ quát ngay từ đầu
+
+## Màu sắc
+- Sử dụng các biến màu từ theme thông qua `theme.palette`
+- Không hardcode mã màu (#hex, rgb(), v.v.) trong code
+- Tuân thủ hệ thống màu sắc đã định nghĩa: primary, secondary, error, warning, info, success
+- Sử dụng các cấp độ tone màu nhất quán (light, main, dark)
+- Có xem xét về độ tương phản cho accessibility
+- Đảm bảo contrast ratio đạt WCAG AA (4.5:1 cho text thường, 3:1 cho text lớn)
+
+## Typography
+- Sử dụng các variant typography từ theme: h1-h6, subtitle1, subtitle2, body1, body2...
+- Không tự định nghĩa font-size, font-weight, line-height
+- Tham chiếu tới `theme.typography` để đảm bảo tính nhất quán
+- Sử dụng rem hoặc em thay vì px cho font-size
+- Typography thích ứng cho các breakpoints khác nhau:
+
+```typescript
+export const STitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1rem',
+  
+  [theme.breakpoints.up('sm')]: {
+    fontSize: '1.25rem',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    fontSize: '1.5rem',
+  }
+}));
+```
+
+## Spacing và Layout
+- Sử dụng hệ thống spacing từ theme thông qua `theme.spacing()`
+- Tuân thủ nguyên tắc 8-point grid system
+- Đảm bảo spacing nhất quán giữa các component
+- Tránh sử dụng các giá trị spacing tùy ý
+- Layout thích ứng với màn hình:
+
+```typescript
+// Sử dụng Grid với props responsive
+<Grid container spacing={2}>
+  <Grid item xs={12} sm={6} md={4} lg={3}>
+    <Content />
+  </Grid>
+</Grid>
+
+// Stack thích ứng
+<Stack 
+  direction={{ xs: 'column', sm: 'row' }}
+  spacing={{ xs: 1, sm: 2, md: 3 }}
+>
+  <Item />
+  <Item />
+</Stack>
+
+// Spacing thích ứng
+<Box sx={{ 
+  p: { xs: 1, sm: 2, md: 3 },
+  m: { xs: 1, sm: 2, md: 3 }
+}}/>
+```
+
+## Breakpoints và Media Queries
+```typescript
+// Breakpoints chuẩn của MUI
+xs: 0px     // Điện thoại nhỏ
+sm: 600px   // Điện thoại/tablet nhỏ
+md: 900px   // Tablet lớn/laptop nhỏ
+lg: 1200px  // Laptop/desktop
+xl: 1536px  // Màn hình lớn
+
+// Cách sử dụng trong styled-components
+export const SComponent = styled(Component)(({ theme }) => ({
+  // Styles mặc định (mobile)
+  padding: theme.spacing(1),
+  
+  [theme.breakpoints.up('sm')]: {
+    // Styles cho tablet trở lên
+    padding: theme.spacing(2),
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    // Styles cho desktop trở lên
+    padding: theme.spacing(3),
+  }
+}));
+```
+
+## Components thích ứng
+
+### Card
+```typescript
+export const SCard = styled(Card)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  
+  [theme.breakpoints.up('sm')]: {
+    flexDirection: 'row',
+  },
+  
+  '& .MuiCardMedia-root': {
+    height: 200,
+    
+    [theme.breakpoints.up('sm')]: {
+      width: 200,
+      height: 'auto',
+    }
+  }
+}));
+```
+
+### Form
+```typescript
+export const SForm = styled('form')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(2),
+  
+  '& .MuiFormControl-root': {
+    width: '100%',
+  },
+  
+  [theme.breakpoints.up('md')]: {
+    '& .form-row': {
+      display: 'flex',
+      gap: theme.spacing(2),
+      
+      '& .MuiFormControl-root': {
+        flex: 1,
+      }
+    }
+  }
+}));
+```
+
+### Visibility thích ứng
+```typescript
+<Box sx={{ display: { xs: 'none', md: 'block' } }}>
+  {/* Nội dung chỉ hiển thị trên desktop */}
+</Box>
+
+<Box sx={{ display: { xs: 'block', md: 'none' } }}>
+  {/* Nội dung chỉ hiển thị trên mobile */}
+</Box>
+```
+
+## Component States
+- Thiết kế rõ ràng các trạng thái: default, hover, active, focus, disabled
+- Sử dụng disabled props thay vì CSS opacity 
+- Cung cấp feedback trực quan cho các interactive elements
+- Xác định outline style cho focus state
+- States thích ứng:
+
+```typescript
+export const SButton = styled(Button)(({ theme }) => ({
+  transition: 'all 0.3s ease',
+  
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: theme.shadows[4],
+    
+    [theme.breakpoints.down('sm')]: {
+      // Điều chỉnh hiệu ứng hover trên mobile
+      transform: 'none',
+    }
+  }
+}));
+```
+
+## Media và Hình ảnh
+
+### Responsive Images
+```typescript
+export const SImage = styled('img')(({ theme }) => ({
+  width: '100%',
+  maxWidth: '100%',
+  height: 'auto'
+}));
+```
+
+### Background Images
+```typescript
+export const SBackground = styled(Box)(({ theme }) => ({
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+  width: '100%',
+  
+  height: 200,
+  [theme.breakpoints.up('sm')]: {
+    height: 300,
+  },
+  [theme.breakpoints.up('md')]: {
+    height: 400,
+  }
+}));
+```
+
+## Accessibility
+- Sử dụng semantic elements (button, a, h1, nav, etc.)
+- Cung cấp focus visible cho tất cả interactive elements
+- Hỗ trợ keyboard navigation
+- Sử dụng ARIA attributes khi cần thiết
+- Điều chỉnh kích thước tương tác trên mobile:
+
+```typescript
+export const STouchButton = styled(Button)(({ theme }) => ({
+  // Đảm bảo kích thước tối thiểu cho tương tác chạm
+  [theme.breakpoints.down('sm')]: {
+    minWidth: '44px',
+    minHeight: '44px',
+    padding: theme.spacing(1.5)
+  }
+}));
+```
+
+## Các kỹ thuật tiên tiến
+- Sử dụng hook `useMediaQuery` để logic điều kiện:
+
+```typescript
+const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+return isMobile ? <MobileView /> : <DesktopView />;
+```
+
+- Container có maxWidth:
+```typescript
+<Container maxWidth="lg" sx={{ 
+  my: { xs: 2, sm: 3, md: 4 },
+  px: { xs: 1, sm: 2, md: 3 }
+}}>
+```
+
+- Kiểm tra tỷ lệ màn hình:
+```typescript
+const isLandscape = useMediaQuery('(orientation: landscape)');
+```
+
+## Các lỗi cần tránh
+- Hardcode chiều cao cố định không phù hợp với nội dung
+- Text quá nhỏ trên thiết bị di động (< 14px)
+- Không xem xét các phần tử tương tác đủ lớn cho thao tác chạm (tối thiểu 44x44px)
+- Lộn xộn UI với quá nhiều phần tử trên màn hình nhỏ
+- Không xử lý overflow nội dung
+- Hardcode mã màu thay vì sử dụng theme
+- Không kiểm tra giao diện trên các thiết bị khác nhau
+
+
+## 21. Sơ Đồ cấu trúc backend hiện tại
 apps/api/
 ├── src/                 # Source code - Mã nguồn chính
 │   ├── controllers/     # Route controllers - Bộ điều khiển tuyến đường
